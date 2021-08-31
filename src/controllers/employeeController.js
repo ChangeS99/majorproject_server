@@ -23,8 +23,8 @@ exports.createEmployee_POST = async (req, res) => {
     }
     let roleExist = null, depExist = null
     try {
-        roleExist = await HospitalRole.findOne({$and: [{name: data.role}, {hospitalId}]});
-        depExist = await HospitalDep.findOne({$and: [{name: data.department}, {hospitalId}]});
+        roleExist = await HospitalRole.findOne({ $and: [{ name: data.role }, { hospitalId }] });
+        depExist = await HospitalDep.findOne({ $and: [{ name: data.department }, { hospitalId }] });
     } catch (error) {
         return res.status(400).json({
             error: "Error finding role and department"
@@ -49,8 +49,11 @@ exports.createEmployee_POST = async (req, res) => {
         middleName: data.middleName,
         lastName: data.lastName,
         email: data.email,
-        role: roleExist.name,
-        department: depExist.name,
+        contact: {
+            email: data.email
+        },
+        role: [roleExist.name],
+        departments: [depExist.name],
         joined: data.joined,
         left: data.left,
         timing: {
@@ -104,20 +107,127 @@ exports.createEmployee_POST = async (req, res) => {
     })
 }
 
-// POST /api/hospital/employee/read
+//POST /api/hospital/employee/read
 exports.readEmployee_POST = (req, res) => {
     const { employeeId } = req.body;
-    Employee.findOne({ _id: employeeId }).exec((err, emp) => {
+
+    Employee.findById(employeeId).exec((err, emp) => {
         if (err || !emp) {
             return res.status(404).json({
-                error: "Employee not found."
+                error: "employee not found."
             })
         }
 
-        return res.json({
-            employee: emp
-        })
+        const {
+            _id,
+            firstName,
+            middleName,
+            lastName,
+            roles,
+            departments,
+            contact,
+            dob,
+            joined,
+            left,
+            timing,
+        } = emp;
+
+        return res.status(201).json({
+            message: `employee found.`,
+            raw: emp,
+            employee: {
+                name: {
+                    firstName,
+                    middleName,
+                    lastName,
+                },
+                detail: {
+                    _id,
+                    dob,
+                    roles,
+                    departments
+                },
+                hospital: {
+                    joined,
+                    left,
+                    timing
+                },
+                contact,
+            }
+        });
     })
+}
+
+// PUT /api/hospital/employee/update
+exports.updateEmployee_PUT = async (req, res) => {
+    const hospitalId = req.hospitalId;
+
+    const { employeeId, data, tab } = req.body;
+
+    const employee = await Employee.findById(employeeId).catch(_ => {
+        return res.status(500).json({
+            error: "Error finding employee"
+        })
+    });
+
+    if (!employee) {
+        return res.status(404).json({
+            error: "employee not found."
+        })
+    }
+
+    Object.keys(data).map(prop => {
+        employee[prop] = data[prop]
+    });
+
+    try {
+        await employee.save();
+
+        const {
+            _id,
+            firstName,
+            middleName,
+            lastName,
+            roles,
+            departments,
+            contact,
+            dob,
+            joined,
+            left,
+            timing,
+        } = employee;
+
+        return res.status(201).json({
+            message: `${tab} properties of the employee updated successfully`,
+            raw: employee,
+            employee: {
+                name: {
+                    firstName,
+                    middleName,
+                    lastName,
+                },
+                detail: {
+                    _id,
+                    dob,
+                    roles,
+                    departments
+                },
+                hospital: {
+                    departments,
+                    joined,
+                    left,
+                    timing
+                },
+                contact,
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({
+            error: "Could not update employee"
+        })
+    }
+
 }
 
 //POST /api/hospital/employee/search
@@ -154,35 +264,6 @@ exports.hospitalEmployeeList_POST = (req, res) => {
     })
 }
 
-// PUT /api/hospital/employee/update
-exports.updateEmployee_PUT = (req, res) => {
-    const { employeeId, updateData } = req.body;
-
-    Employee.findOne({ _id: employeeId }).exec((err, emp) => {
-        if (err || !emp) {
-            return res.status(404).json({
-                error: "Employee not found."
-            })
-        }
-
-        Object.keys(updateData).forEach(key => {
-            emp[key] = updateData[key];
-        });
-
-        emp.save((err, saved) => {
-            if (err) {
-                return res.status(400).json({
-                    error: "Couldn't update the employee"
-                });
-            }
-
-            return res.json({
-                message: "Employee updated successfully.",
-                employee: saved
-            })
-        })
-    })
-}
 
 // DELETE /api/hospital/employee/delete
 exports.deleteEmployee_DELETE = async (req, res) => {

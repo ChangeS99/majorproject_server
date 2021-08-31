@@ -361,7 +361,7 @@ exports.hospitalDetail_POST = (req, res) => {
                 error: "Hospital not found."
             })
         }
-        const { _id, name, admins, contact, roles, departments } = hosp;
+        const { _id, name, admins, contact, roles, departments, location, floors, rooms } = hosp;
         return res.json({
             hospital: {
                 _id,
@@ -372,8 +372,11 @@ exports.hospitalDetail_POST = (req, res) => {
                 staffs: hosp.staffCount,
                 admins: hosp.adminCount,
                 patients: hosp.patientCount,
+                location,
                 roles,
-                departments
+                departments,
+                floors,
+                rooms
             },
         })
     })
@@ -631,6 +634,172 @@ exports.deleteDepartmentHospital_DELETE = async (req, res) => {
         console.log(error);
         return res.status(400).json({
             error: "Couldn't delete role."
+        })
+    }
+}
+
+//GET /api/hospital/floor/all
+exports.hospitalAllFloor_GET = (req, res) => {
+    const hospitalId = req.hospitalId;
+
+    Hospital.findById(hospitalId)
+    .then(hospital => {
+        const floors = hospital.floors;
+        return res.status(200).json({
+            message: "queried all floors",
+            floors
+        })
+    })
+}
+
+//GET /api/hospital/room/all
+exports.hospitalAllRoom_GET = (req, res) => {
+    const hospitalId = req.hospitalId;
+
+    Hospital.findById(hospitalId)
+    .then(hospital => {
+        const rooms = hospital.rooms;
+        return res.status(200).json({
+            message: "queried all rooms",
+            rooms
+        })
+    })
+}
+
+//POST /api/hospital/floor/create
+exports.hospitalFloorCreate_POST = async (req, res) => {
+    const hospitalId = req.hospitalId;
+    const {floor} = req.body;
+
+    if(!floor) {
+        return res.status(400).json({
+            error: "Required parameters not provided."
+        })
+    }
+
+    if(Number(floor.number) > 10000) {
+        return res.status(400).json({
+            error: "Please provide a valid input."
+        })
+    }
+
+    const hospital = await Hospital.findById(hospitalId).catch(_ => {
+        return res.status(500).json({
+            error: "Error finding hospital"
+        })
+    })
+
+    const exist = hospital.floors.find(item => Number(item.number) === Number(floor.number));
+    if(exist) {
+        return res.status(400).json({
+            error: "Floor already exists"
+        })
+    }
+
+    try {
+        const hosp = await hospital.createFloor(floor);
+        return res.status(201).json({
+            message: "Floor created successfully.",
+            floors: hosp.floors
+        })
+    } catch(error) {
+        return res.status(400).json({
+            error: "Error creating floor."
+        })
+    }
+}
+
+//POST /api/hospital/room/create
+exports.hospitalRoomCreate_POST = async (req, res) => {
+    const hospitalId = req.hospitalId;
+    const {room } = req.body;
+
+    if(!room) {
+        return res.status(400).json({
+            error: "Required parameters not provided."
+        })
+    }
+
+    if(Number(room.number) > 10000) {
+        return res.status(400).json({
+            error: "Please provide an input."
+        })
+    }
+
+    const hospital = await Hospital.findById(hospitalId).catch(_ => {
+        return res.status(500).json({
+            error: "Error finding hospital"
+        })
+    })
+
+    const exist = hospital.rooms.find(item => Number(item.number) === Number(room.number) && Number(item.floor) === Number(room.floor));
+
+    if(exist) {
+        return res.status(400).json({
+            error: "Room already exists for the particular floor."
+        })
+    }
+
+    try {
+        const updated = await hospital.createRoom(room);
+        return res.status(201).json({
+            message: "room created successfully",
+            rooms: updated.rooms
+        })
+    } catch(error) {
+        console.log(error);
+        return res.status(400).json({
+            error: "Error creating room."
+        })
+    }
+}
+
+//DELETE /api/hospital/floor/delete
+exports.hospitalFloorDelete_DELETE = async (req, res) => {
+    const hospitalId = req.hospitalId;
+    const {floor} = req.body;
+
+    const hospital = await Hospital.findById(hospitalId).catch(_ => {
+        return res.status(500).json({
+            error: "Error finding hospital"
+        })
+    })
+
+    try {
+        const updated = await hospital.deleteFloor(floor.number);
+        return res.status(200).json({
+            message: `Floor ${floor.number} deleted successfully.`,
+            floors: updated.floors,
+            rooms: updated.rooms
+        })
+    } catch(error) {
+        console.log(error);
+        return res.status(400).json({
+            error: "Couldn't delete floor."
+        })
+    }
+}
+
+//DELETE /api/hospital/room/delete
+exports.hospitalRoomDelete_DELETE = async (req, res) => {
+    const hospitalId = req.hospitalId;
+    const {room} = req.body;
+
+    const hospital = await Hospital.findById(hospitalId).catch(_ => {
+        return res.status(500).json({
+            error: "Error finding hospital"
+        })
+    })
+
+    try {
+        const updated = await hospital.deleteRoom(room.number);
+        return res.status(200).json({
+            message: `Room ${room.number} of floor ${room.floor} deleted successfully.`,
+            rooms: updated.rooms
+        })
+    } catch(error) {
+        return res.status(400).json({
+            error: "Couldn't delete room."
         })
     }
 }

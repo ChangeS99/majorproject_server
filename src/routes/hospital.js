@@ -13,7 +13,13 @@ const {
     hospitalCreateRole_POST,
     hospitalCreateDepartment_POST,
     deleteDepartmentHospital_DELETE,
-    deleteRoleHospital_DELETE
+    deleteRoleHospital_DELETE,
+    hospitalAllFloor_GET,
+    hospitalAllRoom_GET,
+    hospitalFloorCreate_POST,
+    hospitalFloorDelete_DELETE,
+    hospitalRoomCreate_POST,
+    hospitalRoomDelete_DELETE
 } = require('../controllers/hospitalController');
 
 const {
@@ -114,6 +120,24 @@ router.post("/admin/announcement/find", verifyHospitalCookie, adminAnnouncementF
 router.post("/admin/announcement/search", verifyHospitalCookie, adminAnnouncementSearch_POST);
 
 //==========================================
+//floor and room related
+//GET /api/hospital/floor/all
+router.get("/floor/all", verifyHospitalCookie, hospitalAllFloor_GET);
+
+//GET /api/hospital/room/all
+router.get("/room/all", verifyHospitalCookie, hospitalAllRoom_GET);
+
+//POST /api/hospital/floor/create
+router.post("/floor/create", verifyHospitalCookie, hospitalFloorCreate_POST);
+
+//POST /api/hospital/room/create
+router.post("/room/create", verifyHospitalCookie, hospitalRoomCreate_POST);
+
+//DELETE /api/hospital/floor/delete
+router.delete("/floor/delete", verifyHospitalCookie, hospitalFloorDelete_DELETE);
+
+//DELETE /api/hospital/room/delete
+router.delete("/room/delete", verifyHospitalCookie, hospitalRoomDelete_DELETE);
 
 
 module.exports = router;

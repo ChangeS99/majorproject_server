@@ -36,87 +36,42 @@ const employeeSchema = new mongoose.Schema({
         required: true,
         max: 50,
     },
-    role: {
+    roles: [{
         type: String
-    },
+    }],
     type: {
         type: String
     },
-    department: {
+    departments: [{
         type: String
+    }],
+    dob: {
+        type: Date
     },
     joined: {
-        day: {
-            type: Number,
-            min: 1,
-            max: 31
-        },
-        month: {
-            type: Number,
-            min: 1,
-            max: 12
-        },
-        year: {
-            type: Number,
-            min: 1950,
-            max: 4000
-        }
+        type: Date
     },
     left: {
-        day: {
-            type: Number,
-            min: 1,
-            max: 31
-        },
-        month: {
-            type: Number,
-            min: 1,
-            max: 12
-        },
-        year: {
-            type: Number,
-            min: 1950,
-            max: 4000
-        }
+        type: Date
     },
     timing: {
         arrival: {
-            hour: {
-                type: Number,
-                min: 0,
-                max: 23
-            },
-            minute: {
-                type: Number,
-                min: 0,
-                max: 59,
-            },
-            second: {
-                type: Number,
-                min: 0,
-                max: 59
-            }
+            type: String,
         },
         leaving: {
-            hour: {
-                type: Number,
-                min: 0,
-                max: 23
-            },
-            minute: {
-                type: Number,
-                min: 0,
-                max: 59,
-            },
-            second: {
-                type: Number,
-                min: 0,
-                max: 59
-            }
+            type: String
         }
     },
     hospitalId: {
         type: mongoose.Schema.Types.ObjectId
+    },
+    contact: {
+        phone: {
+            type: String
+        },
+        email: {
+            type: String
+        }
     }
 }, {
     timestamps: true

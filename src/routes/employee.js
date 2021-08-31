@@ -5,7 +5,9 @@ const {
     hospitalEmployeeList_POST,
     employeeHospitalSearch_POST,
     createEmployee_POST,
-    deleteEmployee_DELETE
+    deleteEmployee_DELETE,
+    readEmployee_POST,
+    updateEmployee_PUT
 } = require('../controllers/employeeController');
 
 //middlewares
@@ -24,5 +26,11 @@ router.post("/list", verifyHospitalCookie, hospitalEmployeeList_POST);
 
 //POST /api/hospital/employee/list
 router.post("/search", verifyHospitalCookie, employeeHospitalSearch_POST);
+
+//POST /api/hospital/employee/read
+router.post("/find", verifyHospitalCookie, readEmployee_POST);
+
+// PUT /api/hospital/employee/update
+router.put("/update", verifyHospitalCookie, updateEmployee_PUT);
 
 module.exports = router

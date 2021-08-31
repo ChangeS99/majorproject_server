@@ -100,26 +100,34 @@ const hospitalSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId
         }
     ],
-    room: [
+    rooms: [
         {
             number: {
                 type: Number,
-                min: 1,
-                max: 5000
+                min: 0,
+                max: 10000
             },
             detail: {
                 type: String,
                 min: 3,
                 max: 50
+            },
+            name: {
+                type: String,
+                min:1,
+                max: 30
+            },
+            floor: {
+                type: Number
             }
         }
     ],
-    floor: [
+    floors: [
         {
             number: {
                 type: Number,
-                min: 1,
-                max: 500
+                min: 0,
+                max: 10000
             },
             detail: {
                 type: String,
@@ -227,6 +235,34 @@ hospitalSchema.methods = {
             .toString('hex') /** convert to hexadecimal format */
             .slice(0, 16);   /** return required number of characters */
     },
+
+    createFloor: async function (floor) {
+        const newFloorList = [...this.floors, floor];
+        this.floors = [...newFloorList];
+        await this.save();
+        return this;
+    },
+    createRoom: async function (room){  
+
+        const newRoomList = [...this.rooms, room];
+        this.rooms = [...newRoomList];
+        await this.save();
+        return this;
+    },
+    deleteFloor: async function (number) {
+        const newList = this.floors.filter(floor => floor.number !== number);
+        this.floors = [...newList];
+        const newRooms = this.rooms.filter(room => room.floor !== number);
+        this.rooms = [...newRooms];
+        await this.save();
+        return this;
+    },
+    deleteRoom: async function(number) {
+        const newList = this.rooms.filter(room => room.number !== number);
+        this.rooms = [...newList];
+        await this.save();
+        return this;
+    }
 }
 
 hospitalSchema.plugin(fuzzy, {

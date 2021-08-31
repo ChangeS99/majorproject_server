@@ -12,51 +12,56 @@ const patientSchema = new mongoose.Schema({
                 type: String,
                 min: 1,
                 max: 50,
-                unique: true
+                default: "",
             },
             longitude: {
                 type: String,
                 min: 1,
                 max: 50,
-                unique: true
+                default: "",
             },
         },
         country: {
             type: String,
             min: 1,
             max: 50,
+            default: "",
             // required: true
         },
         region: {
             type: String,
             min: 1,
             max: 50,
+            default: "",
             // required: true
         },
         place: {
             type: String,
             min: 1,
             max: 100,
+            default: "",
             // required: true
         },
         district: {
             type: String,
             min: 1,
             max: 50,
+            default: "",
             // required: true
         },
         pincode: {
             type: String,
             min: 6,
-            max: 6
+            max: 6,
+            default: "",
         },
         text: {
             type: String,
             min: 1,
-            max: 100
+            max: 100,
+            default: "",
         },
     },
-
     firstName: {
         type: String,
         required: true,
@@ -77,89 +82,37 @@ const patientSchema = new mongoose.Schema({
         max: 30,
         trim: true
     },
-
-    department: [
+    departments: [
         {
             type: String
         }
     ],
+    dob: {
+        type: Date
+    },
     admitted: {
-        date: {
-            day: {
-                type: Number,
-                min: 1,
-                max: 31
-            },
-            month: {
-                type: Number,
-                min: 1,
-                max: 12
-            },
-            year: {
-                type: Number,
-                min: 1950,
-                max: 4000
-            }
-        },
-        time: {
-            hour: {
-                type: Number,
-                min: 0,
-                max: 23
-            },
-            minute: {
-                type: Number,
-                min: 0,
-                max: 59,
-            },
-            second: {
-                type: Number,
-                min: 0,
-                max: 59,
-                default: 0
-            }
-        }  
+        type: Date
     },
     discharged: {
-        date: {
-            day: {
-                type: Number,
-                min: 1,
-                max: 31
-            },
-            month: {
-                type: Number,
-                min: 1,
-                max: 12
-            },
-            year: {
-                type: Number,
-                min: 1950,
-                max: 4000
-            }
-        },
-        time: {
-            hour: {
-                type: Number,
-                min: 0,
-                max: 23
-            },
-            minute: {
-                type: Number,
-                min: 0,
-                max: 59,
-            },
-            second: {
-                type: Number,
-                min: 0,
-                default: 0,
-                max: 59
-            }
-        }    
+        type: Date
     },
+    stages: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Stage"
+        }
+    ],
     email: {
         type: String,
         max: 100
+    },
+    contact: {
+        phone: {
+            type: String
+        },
+        email: {
+            type: String
+        }
     },
     diagnosis: {
         text: {
