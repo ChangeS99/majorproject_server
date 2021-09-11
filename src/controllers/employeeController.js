@@ -16,6 +16,12 @@ exports.createEmployee_POST = async (req, res) => {
         })
     });
 
+    if(data.email === hospital.email) {
+        return res.status(500).json({
+            error: "The email provided cannot be used."
+        })
+    }
+
     if (!hospital) {
         return res.status(404).json({
             error: "Hospital not found."
@@ -48,7 +54,6 @@ exports.createEmployee_POST = async (req, res) => {
         firstName: data.firstName,
         middleName: data.middleName,
         lastName: data.lastName,
-        email: data.email,
         contact: {
             email: data.email
         },
@@ -161,8 +166,17 @@ exports.readEmployee_POST = (req, res) => {
 // PUT /api/hospital/employee/update
 exports.updateEmployee_PUT = async (req, res) => {
     const hospitalId = req.hospitalId;
+    const hospitalEmail = req.hospitalEmail;
 
     const { employeeId, data, tab } = req.body;
+
+    if(data.contact) {
+        if(data.contact.email === hospitalEmail) {
+            return res.status(500).json({
+                error: "The email provided cannot be used."
+            })
+        }
+    }
 
     const employee = await Employee.findById(employeeId).catch(_ => {
         return res.status(500).json({

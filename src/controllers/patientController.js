@@ -16,6 +16,15 @@ exports.createPatient_POST = async (req, res) => {
         })
     });
 
+    if (data.contact) {
+        if (data.contact.email === hospital.email) {
+            return res.status(500).json({
+                error: "The email provided cannot be used."
+            })
+        }
+    }
+
+
     if (!hospital) {
         return res.status(404).json({
             error: "Hospital not found."
@@ -179,10 +188,19 @@ exports.hospitalPatientList_POST = (req, res) => {
 // PUT /api/hospital/patient/update
 exports.updatePatient_PUT = async (req, res) => {
     const hospitalId = req.hospitalId;
+    const hospitalEmail = req.hospitalEmail;
 
     const { patientId, data, tab } = req.body;
 
-    const patient = await Patient.findById(patientId).catch(_ => {
+    if (data.contact) {
+        if (data.contact.email === hospitalEmail) {
+            return res.status(500).json({
+                error: "The email provided cannot be used."
+            })
+        }
+    }
+
+    const patient = await Patient.findById(patientId).populate("stages").catch(_ => {
         return res.status(500).json({
             error: "Error finding patient"
         })
@@ -200,6 +218,7 @@ exports.updatePatient_PUT = async (req, res) => {
 
     try {
         await patient.save();
+        console.log(patient);
 
         const {
             _id,

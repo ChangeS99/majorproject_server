@@ -700,7 +700,8 @@ exports.hospitalFloorCreate_POST = async (req, res) => {
         const hosp = await hospital.createFloor(floor);
         return res.status(201).json({
             message: "Floor created successfully.",
-            floors: hosp.floors
+            floors: hosp.floors,
+            floor
         })
     } catch(error) {
         return res.status(400).json({
@@ -744,7 +745,8 @@ exports.hospitalRoomCreate_POST = async (req, res) => {
         const updated = await hospital.createRoom(room);
         return res.status(201).json({
             message: "room created successfully",
-            rooms: updated.rooms
+            rooms: updated.rooms,
+            room
         })
     } catch(error) {
         console.log(error);
@@ -792,7 +794,7 @@ exports.hospitalRoomDelete_DELETE = async (req, res) => {
     })
 
     try {
-        const updated = await hospital.deleteRoom(room.number);
+        const updated = await hospital.deleteRoom(room.number, room.floor);
         return res.status(200).json({
             message: `Room ${room.number} of floor ${room.floor} deleted successfully.`,
             rooms: updated.rooms

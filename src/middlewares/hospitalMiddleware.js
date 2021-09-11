@@ -36,6 +36,7 @@ exports.verifyHospitalCookie = (req, res, next) => {
                             if (exist) {
                                 req.userId = user._id;
                                 req.hospitalId = hosp._id;
+                                req.hospitalEmail = hosp.email;
                                 next();
                             } else {
                                 return res.status(400).json({

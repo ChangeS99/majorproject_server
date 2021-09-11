@@ -21,6 +21,14 @@ const announcementSchema = new mongoose.Schema({
         min: 1,
         max: 100
     },
+    recipients: {
+        emails: [{
+            type: String
+        }],
+        phones: [{
+            type: String
+        }]
+    },
     hospitalId: {
         type: mongoose.Schema.Types.ObjectId
     }

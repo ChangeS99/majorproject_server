@@ -1,5 +1,7 @@
 const User = require('../models/user');
 const Hospital = require('../models/hospital');
+const Employee = require('../models/employee');
+const Patient = require('../models/patient');
 const Type = require('../models/type');
 const Role = require('../models/role');
 const Temp = require('../models/temp');
@@ -60,7 +62,7 @@ exports.adminHospitalCreate_POST = async (req, res) => {
         exist: false,
     }
 
-    if(userExist) {
+    if (userExist) {
         tokenObject.exist = true;
     }
 
@@ -103,7 +105,7 @@ exports.adminHospitalCreate_POST = async (req, res) => {
 
 //POST /api/hospital/admin/activate/verify
 exports.adminHospitalActivateVerify_POST = (req, res) => {
-    const {token} = req.body;
+    const { token } = req.body;
     const decoded = jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, async function (err, decoded) {
 
         if (err) {
@@ -132,7 +134,7 @@ exports.adminHospitalCreateActivate_POST = async (req, res) => {
             })
         }
 
-        const {email, hospitalId, exist } = decoded;
+        const { email, hospitalId, exist } = decoded;
 
         const hospital = await Hospital.findById(hospitalId).catch(_ => {
             return res.status(400).json({
@@ -166,7 +168,7 @@ exports.adminHospitalCreateActivate_POST = async (req, res) => {
 
 
         if (user) {
-            const isAlreadyActivated = hospital.admins.find(item => item.equals( user._id));
+            const isAlreadyActivated = hospital.admins.find(item => item.equals(user._id));
 
             if (isAlreadyActivated) {
                 return res.status(400).json({
@@ -196,7 +198,7 @@ exports.adminHospitalCreateActivate_POST = async (req, res) => {
             const authToken = jwt.sign({ _id: user._id, username, email }, process.env.JWT_SECRET, {
                 expiresIn: '28d'
             });
-            
+
             if (!req.signedCookies.user || !req.signedCookies.hospital) {
                 res.cookie('hospital', hospitalToken, {
                     maxAge: 1000 * 60 * 60 * 24 * 28,
@@ -287,23 +289,23 @@ exports.adminHospitalCreateActivate_POST = async (req, res) => {
 
 //DELETE /api/hospital/admin/delete
 exports.adminHospitalDelete_DELETE = async (req, res) => {
-    const {_id} = req.body;
+    const { _id } = req.body;
     const hospitalId = req.hospitalId;
     const userId = req.userId;
-    
-    if(userId.equals(_id)) {
+
+    if (userId.equals(_id)) {
         return res.status(400).json({
             error: "Cannot delete the signed in account. Please use another admin account to delete it."
         })
     }
 
-    const user = await User.findOne({$and: [{_id}, {"accountRoles.type.typeId": hospitalId}]}).catch(_ => {
+    const user = await User.findOne({ $and: [{ _id }, { "accountRoles.type.typeId": hospitalId }] }).catch(_ => {
         return res.status(400).json({
             error: "Error finding hospital"
         })
     })
 
-    if(!user) {
+    if (!user) {
         return res.status(400).json({
             error: "User is not an admin."
         })
@@ -315,7 +317,7 @@ exports.adminHospitalDelete_DELETE = async (req, res) => {
         })
     })
 
-    if(!hospital) {
+    if (!hospital) {
         return res.status(400).json({
             error: "Hospital not found."
         })
@@ -328,7 +330,7 @@ exports.adminHospitalDelete_DELETE = async (req, res) => {
         return !item.type.typeId.equals(hospitalId)
     })
     user.accountRoles = [...newAccountRoles];
-    
+
     try {
         await user.save();
         await hospital.save();
@@ -338,7 +340,7 @@ exports.adminHospitalDelete_DELETE = async (req, res) => {
         return res.json({
             message: "Successfully deleted"
         })
-    } catch(error) {
+    } catch (error) {
         return res.status(400).json({
             error: "Could not delete the given admin.",
             message: error.message
@@ -383,9 +385,9 @@ exports.adminHospitalSearch_POST = async (req, res) => {
 //POST /api/hospital/admin/announcement/create
 exports.adminAnnouncementCreate_POST = async (req, res) => {
     const hospitalId = req.hospitalId;
-    const { title, field, detail} = req.body;
+    const { title, field, detail, specific } = req.body;
 
-    if(!title.length >= 1 || !detail.length >= 1 || !field.length >= 1) {
+    if (!title.length >= 1 || !detail.length >= 1 || !field.length >= 1) {
         return res.status(400).json({
             error: "Required values are not provided."
         })
@@ -399,53 +401,144 @@ exports.adminAnnouncementCreate_POST = async (req, res) => {
 
     const fieldExist = Object.values(fields).find(item => item === field);
 
-    if(!fieldExist) {
+    if (!fieldExist) {
         return res.status(404).json({
             error: "Given field doesn't exist."
         })
     }
 
-    const annExist = await Announcement.findOne({title, field}).catch(_ => {
+    const annExist = await Announcement.findOne({ title, field }).catch(_ => {
         return res.status(400).json({
             error: "Error finding announcement"
         })
     });
 
-    if(annExist) {
+    if (annExist) {
         return res.status(400).json({
             error: "Announcement with the title already exists for the given field."
         })
     }
 
-    const announcement = new Announcement({
-        title, 
-        field,
-        detail,
-        hospitalId
-    });
+    let list = [];
 
-    announcement.save((err, ann) => {
-        if(err) {
-            return res.status(400).json({
-                error: "Error saving announcement"
+    if (!specific.length >= 1) {
+        switch (field) {
+            case fields.admin: list = await User.find({ "accountRoles.type.typeId": hospitalId })
+                .select('email')
+                .catch(_ => {
+                    return res.status(500).json({
+                        error: "Error finding admins."
+                    })
+                }); break;
+            case fields.patient: list = await Patient.find({ hospitalId }).select("contact -_id")
+                .catch(_ => {
+                    return res.status(500).json({
+                        error: "Error finding patients."
+                    })
+                }); break;
+            case fields.employee: list = await Employee.find({ hospitalId }).select("contact -id")
+                .catch(_ => {
+                    return res.status(500).json({
+                        error: "Error finding employees."
+                    })
+                }); break;
+            default: list = [];
+        }
+
+        if (!list.length >= 1) {
+            return res.status(404).json({
+                error: `no ${field} found`
+            })
+        }
+    } else {
+
+        try {
+            switch (field) {
+                case fields.employee: list = await Employee.find({ $and: [{ hospitalId }, { "contact.email": specific }] })
+                    .select("contact")
+                    ; break;
+                case fields.patient: list = await Patient.find({ $and: [{ hospitalId }, { "contact.email": specific }] })
+                    .select("contact")
+                    ; break;
+            }
+        } catch (error) {
+
+            return res.status(500).json({
+                error: "Server error."
             })
         }
 
-        const newAnnList = [...hospital.announcements, ann._id];
-        hospital.announcements = [...newAnnList];
-        hospital.save((err, hosp) => {
-            if(err) {
-                return res.status(400).json({
-                    error: "Error saving hospital."
-                })
-            }
 
-            return res.status(201).json({
-                messsage: "Announcement created successfully",
-                announcement
+        if (!list.length >= 1) {
+            return res.status(404).json({
+                error: `no ${field} found with email ${specific}`
             })
-        })
+        }
+    }
+
+
+
+    const emailList = list.map(item => item.contact.email);
+    const phoneList = list.map(item => item.contact.phone);
+
+    // return res.json({
+    //     message: "try",
+    //     list: [...emailList]
+    // })
+
+    const announcement = new Announcement({
+        title,
+        field,
+        detail,
+        recipients: {
+            emails: [...emailList]
+        },
+        hospitalId
     });
+
+    const emailData = {
+        from: process.env.EMAIL_FROM,
+        to: [...emailList],
+        subject: title,
+        html: `
+        <p>${detail}</p>
+        `
+    }
+
+    sgMail.send(emailData)
+        .then(sent => {
+
+            announcement.save((err, ann) => {
+                if (err) {
+                    return res.status(400).json({
+                        error: "Error saving announcement"
+                    })
+                }
+
+                const newAnnList = [...hospital.announcements, ann._id];
+                hospital.announcements = [...newAnnList];
+                hospital.save((err, hosp) => {
+                    if (err) {
+                        return res.status(400).json({
+                            error: "Error saving hospital."
+                        })
+                    }
+
+                    return res.status(201).json({
+                        message: "Announcement sent successfully",
+                        announcement
+                    })
+                })
+            });
+
+        })
+        .catch(err => {
+            // console.log(err);
+            return res.status(400).json({
+                error: err.message
+            })
+        });
+
 
 
 
@@ -454,7 +547,7 @@ exports.adminAnnouncementCreate_POST = async (req, res) => {
 //POST /api/hospital/admin/announcement/find
 exports.adminAnnouncementFind_POST = async (req, res) => {
     const hospitalId = req.hospitalId;
-    const {field} = req.body;
+    const { field } = req.body;
 
     // const hospital = await Hospital.findById(hospitalId).catch(_ => {
     //     return res.status(400).json({
@@ -463,33 +556,33 @@ exports.adminAnnouncementFind_POST = async (req, res) => {
     // });
 
     const fieldExist = Object.values(fields).find(item => item === field);
-    if(!fieldExist) {
+    if (!fieldExist) {
         return res.status(404).json({
             error: "Given field not found."
         })
     }
 
-    const announcements = await Announcement.find({$and: [{field},{hospitalId}]}).sort({"createdAt": "desc"}).limit(10);
+    const announcements = await Announcement.find({ $and: [{ field }, { hospitalId }] }).sort({ "createdAt": "desc" }).limit(10);
 
     return res.json({
         announcements
     })
 
-}   
+}
 
 //POST /api/hospital/admin/announcement/search
 exports.adminAnnouncementSearch_POST = async (req, res) => {
     const hospitalId = req.hospitalId;
-    const {query, filter} = req.body;
+    const { query, filter } = req.body;
 
-    if(query.length < 1) {
+    if (query.length < 1) {
         return res.json({
             result: []
         });
     }
 
-    const announcements = await Announcement.find({$and: [{field: filter}, {hospitalId}]})
-    .fuzzySearch({ query, minSize: 3 }).sort({"createdAt": "desc"}).select("title field detail");
+    const announcements = await Announcement.find({ $and: [{ field: filter }, { hospitalId }] })
+        .fuzzySearch({ query, minSize: 3 }).sort({ "createdAt": "desc" }).select("title field detail");
 
     return res.json({
         result: announcements

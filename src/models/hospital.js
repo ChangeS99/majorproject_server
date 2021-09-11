@@ -257,8 +257,8 @@ hospitalSchema.methods = {
         await this.save();
         return this;
     },
-    deleteRoom: async function(number) {
-        const newList = this.rooms.filter(room => room.number !== number);
+    deleteRoom: async function(number, floor) {
+        const newList = this.rooms.filter(room => Number(room.number) !== number && Number(room.floor) === floor);
         this.rooms = [...newList];
         await this.save();
         return this;
