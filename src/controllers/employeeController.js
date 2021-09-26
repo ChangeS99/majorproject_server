@@ -57,6 +57,7 @@ exports.createEmployee_POST = async (req, res) => {
         contact: {
             email: data.email
         },
+        email: data.email,
         role: [roleExist.name],
         departments: [depExist.name],
         joined: data.joined,
@@ -163,8 +164,8 @@ exports.readEmployee_POST = (req, res) => {
     })
 }
 
-// PUT /api/hospital/employee/update
-exports.updateEmployee_PUT = async (req, res) => {
+// PATCH /api/hospital/employee/update
+exports.updateEmployee_PATCH = async (req, res) => {
     const hospitalId = req.hospitalId;
     const hospitalEmail = req.hospitalEmail;
 

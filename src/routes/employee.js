@@ -7,7 +7,7 @@ const {
     createEmployee_POST,
     deleteEmployee_DELETE,
     readEmployee_POST,
-    updateEmployee_PUT
+    updateEmployee_PATCH
 } = require('../controllers/employeeController');
 
 //middlewares
@@ -31,6 +31,6 @@ router.post("/search", verifyHospitalCookie, employeeHospitalSearch_POST);
 router.post("/find", verifyHospitalCookie, readEmployee_POST);
 
 // PUT /api/hospital/employee/update
-router.put("/update", verifyHospitalCookie, updateEmployee_PUT);
+router.patch("/update", verifyHospitalCookie, updateEmployee_PATCH);
 
 module.exports = router

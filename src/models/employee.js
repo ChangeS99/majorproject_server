@@ -56,10 +56,20 @@ const employeeSchema = new mongoose.Schema({
     },
     timing: {
         arrival: {
-            type: String,
+            hour: {
+                type: String
+            },
+            minute: {
+                type: String
+            }
         },
         leaving: {
-            type: String
+            hour: {
+                type: String
+            },
+            minute: {
+                type: String
+            }
         }
     },
     hospitalId: {

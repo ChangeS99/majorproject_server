@@ -7,7 +7,7 @@ const {
     createPatient_POST,
     deletePatient_DELETE,
     readPatient_POST,
-    updatePatient_PUT,
+    updatePatient_PATCH,
     patientStageCreate_POST,
     patientStageDelete_DELETE
 } = require('../controllers/patientController');
@@ -30,7 +30,7 @@ router.post("/search", verifyHospitalCookie, patientHospitalSearch_POST);
 router.post("/list", verifyHospitalCookie, hospitalPatientList_POST);
 
 // PUT /api/hospital/patient/update
-router.put("/update", verifyHospitalCookie, updatePatient_PUT);
+router.patch("/update", verifyHospitalCookie, updatePatient_PATCH);
 
 //DELETE /api/hospital/patient/delete
 router.delete("/delete", verifyHospitalCookie, deletePatient_DELETE);

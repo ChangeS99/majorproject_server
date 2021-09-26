@@ -186,7 +186,7 @@ exports.hospitalPatientList_POST = (req, res) => {
 }
 
 // PUT /api/hospital/patient/update
-exports.updatePatient_PUT = async (req, res) => {
+exports.updatePatient_PATCH = async (req, res) => {
     const hospitalId = req.hospitalId;
     const hospitalEmail = req.hospitalEmail;
 
